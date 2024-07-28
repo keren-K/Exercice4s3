@@ -1,0 +1,40 @@
+L'automatisation de la journalisation et backup, pour chaque log de serveurs (php, node js, angular) dans des fichiers .txt.
+A chaque fois que les logs atteindront 4ko de taille, copier leurs contenus dans fichiers backup et vider les log.
+
+1.yum install httpd -y
+2. sudo mkdir -p /var/www/html/myapp
+3. echo "<html><body><h1>Home Page</h1></body></html>" | sudo tee /var/www/html/myapp/home.html
+4. echo "<html><body><h1>Help Page</h1></body></html>" | sudo tee /var/www/html/myapp/help.html
+5. sudo nano /etc/httpd/conf.d/myapp.conf y insérer 
+<VirtualHost *:80>
+    DocumentRoot "/var/www/html/myapp"
+    ServerName your-domain.com
+
+    <Directory "/var/www/html/myapp">
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    CustomLog "/var/log/httpd/myapp_access.log" combined
+</VirtualHost>
+
+6. sudo systemctl restart httpd
+7. sudo cat myapp_access.log
+8. sudo nano /usr/local/bin/logrotate.sh
+#!/bin/bash
+9. LOG_FILE="/var/log/httpd/myapp_access.log"
+10. MAX_SIZE=4
+11. ARCHIVE_FILE="/var/log/httpd/myapp_access_$(date +%Y%m%d%H%M%S).log"
+12. if [ $(stat -c%s "$LOG_FILE") -ge $MAX_SIZE ]; then
+    # Archive le fichier de log principal
+    mv "$LOG_FILE" "$ARCHIVE_FILE"
+13. : > "$LOG_FILE"
+fi
+ 
+14. sudo chmod +x /usr/local/bin/logrotate.sh
+15. crontab -e
+* * * * * /usr/local/bin/logrotate.sh
+
+
+
+
